@@ -1,6 +1,5 @@
-# threat-hunting-tor-browser
+<img width="1262" height="576" alt="image" src="https://github.com/user-attachments/assets/2e6296ad-6417-41c7-bfb7-e94f92c781fb" />
 
-<img width="400" src="https://github.com/user-attachments/assets/44bac428-01bb-4fe9-9d85-96cba7698bee" alt="Tor Logo with the onion and a crosshair on it"/>
 
 # Threat Hunt Report: Unauthorized TOR Usage
 - [Scenario Creation](https://github.com/joshmadakor0/threat-hunting-scenario-tor/blob/main/threat-hunting-scenario-tor-event-creation.md)

@@ -76,10 +76,8 @@ DeviceFileEvents
     InitiatingProcessFileName, FileOriginUrl, SHA256
 | order by Timestamp asc
 ```
+<img width="1124" height="589" alt="image" src="https://github.com/user-attachments/assets/b1561d18-0aea-47a7-bfb0-01a6a582001d" />
 
-![File discovery query overview](image.png)
-
-![File discovery results](image-1.png)
 
 *Figure 1. File-discovery query and results for `jh-tor-hunt-01`.*
 
@@ -111,7 +109,9 @@ DeviceProcessEvents
 | order by Timestamp asc
 ```
 
-![Installer process evidence](image-2.png)
+<img width="1098" height="323" alt="image" src="https://github.com/user-attachments/assets/aa48ddb4-49ff-4e88-82e4-e1d133e61a35" />
+
+
 
 *Figure 2. Tor Browser installer process investigation.*
 
@@ -138,7 +138,10 @@ DeviceProcessEvents
 | order by Timestamp asc
 ```
 
-![Tor Browser component process evidence](image-3.png)
+<img width="1041" height="352" alt="image" src="https://github.com/user-attachments/assets/3ff7473c-9881-4f9c-8f01-25b2d704eb8f" />
+
+
+
 
 *Figure 3. Investigation of Tor Browser and Tor component processes.*
 
@@ -171,9 +174,11 @@ DeviceNetworkEvents
 | order by Timestamp asc
 ```
 
-![Tor process network evidence](image-4.png)
+<img width="1010" height="520" alt="image" src="https://github.com/user-attachments/assets/f3771437-770a-4804-8fe2-4023031c97e0" />
 
-![Additional network evidence](image-5.png)
+
+<img width="884" height="531" alt="image" src="https://github.com/user-attachments/assets/3d40a445-c7f7-48ad-b0eb-0e31f8a754e7" />
+
 
 *Figure 4. Network investigation using initiating-process attribution.*
 

@@ -1,14 +1,16 @@
-# Cybersecurity Capstone: Tor Browser Threat Hunting
+# Scenario Development: Unauthorized TOR Usage
 
-**Scenario Development and Detection of Unauthorized Tor Browser Activity**
+**Supporting documentation for Endpoint Threat Hunt: Unauthorized TOR Usage**
 
-## Project Overview
+## Overview
 
-This capstone demonstrates a complete lab simulation and endpoint investigation of Tor Browser installation and use. The project combines controlled activity generation, KQL investigation queries, and evidence-based reporting using Microsoft Defender for Endpoint.
+This document describes the controlled lab activities and investigation queries supporting the **Endpoint Threat Hunt: Unauthorized TOR Usage** project.
 
-The objective is to reconstruct activity across file, process, and network telemetry and document the evidence supporting each finding.
+The scenario generates file, process, and network telemetry through Tor Browser installation, execution, connectivity, and text-file activity. Microsoft Defender for Endpoint and Kusto Query Language (KQL) are used to investigate these events and reconstruct the activity sequence.
 
-## Project Profile
+The accompanying investigation report presents the observed findings, supporting evidence, and response recommendations.
+
+## Lab Environment
 
 | Attribute | Detail |
 | --- | --- |
@@ -23,46 +25,75 @@ The objective is to reconstruct activity across file, process, and network telem
 | Activity window | October 5, 2026, UTC |
 | Project completed | October 2026 |
 
-## Scenario
+## Scenario Background
 
-Management suspects that an employee is using Tor Browser to bypass organizational network restrictions. The investigation examines installer activity, browser execution, network connections, and related file artifacts to reconstruct the sequence of events.
+Management suspects that an employee is using Tor Browser to bypass organizational network restrictions. The investigation examines installer activity, browser execution, associated network connections, and a scenario-specific text file.
 
-The scenario represents a simulated acceptable-use policy violation. Activity was performed on a controlled lab endpoint.
+This scenario represents a simulated acceptable-use policy violation. All activities were performed on a controlled lab endpoint. The management concern provides the investigation premise; conclusions depend on the telemetry returned.
 
 ## Investigation Objectives
 
 - Identify Tor Browser installer acquisition and execution.
-- Identify Tor Browser components and associated processes.
-- Investigate network connections attributed to those processes.
-- Examine the lifecycle of a scenario-specific text file.
+- Identify deployed Tor Browser components and associated processes.
+- Examine network connections attributed to those processes.
+- Investigate recorded activity involving the scenario text file.
 - Correlate events into a chronological investigation timeline.
-- Document findings and appropriate response recommendations.
+- Document the evidence supporting each finding and its limitations.
 
-## Activity Performed
+## Controlled Scenario Activities
 
-1. Downloaded Tor Browser from the [official Tor Project website](https://www.torproject.org/download/).
-2. Executed the installer on `jh-tor-hunt-01`.
-3. Launched Tor Browser from its installation directory.
-4. Connected to Tor and browsed websites to generate network telemetry.
-5. Created the desktop text file `tor-shopping-list.txt` with fictional test entries.
-6. Deleted the text file to generate additional file activity.
+### 1. Installer Acquisition
 
-### Silent Installation Test Command
+Downloaded Tor Browser from the [official Tor Project website](https://www.torproject.org/download/) using the `employee` account on `jh-tor-hunt-01`.
+
+**Investigation focus:** Installer file events, file location, available download-origin information, and initiating-process context.
+
+### 2. Installer Execution
+
+Executed `tor-browser-windows-x86_64-portable-15.0.20.exe` on the lab endpoint.
+
+The scenario includes the following silent-installation test command:
 
 ```powershell
 .\tor-browser-windows-x86_64-portable-15.0.20.exe /S
 ```
 
-The process command line provides the evidence needed to determine whether the silent-installation switch was used during a particular execution.
+**Investigation focus:** Installer process events, executable path, account, and recorded command line.
+
+The command line determines whether `/S` was supplied during a particular execution. Component file or process activity is needed to corroborate deployment.
+
+### 3. Browser Execution
+
+Launched Tor Browser from its installation directory.
+
+**Investigation focus:** Execution of `tor.exe` and browser components, including executable paths, command lines, and parent-process details.
+
+### 4. Network Activity Generation
+
+Connected to Tor and browsed websites to generate network telemetry.
+
+**Investigation focus:** Connection outcomes, destination addresses, ports, protocol, and initiating-process information.
+
+### 5. Scenario Artifact Creation
+
+Created `tor-shopping-list.txt` on the desktop with fictional test entries.
+
+**Investigation focus:** Recorded file actions, file location, account, and initiating-process context.
+
+### 6. Scenario Artifact Deletion
+
+Deleted the text file to generate additional file activity.
+
+**Investigation focus:** Any deletion event recorded for `tor-shopping-list.txt` and its relationship to earlier file events.
 
 ## Telemetry Sources
 
 | Table | Investigation Purpose | Documentation |
 | --- | --- | --- |
 | `DeviceInfo` | Verify endpoint identity and onboarding context | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceinfo-table) |
-| `DeviceFileEvents` | Investigate installer files, browser components, and artifact activity | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicefileevents-table) |
-| `DeviceProcessEvents` | Investigate executable activity, command lines, and parent processes | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table) |
-| `DeviceNetworkEvents` | Investigate network connections attributed to Tor Browser components | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicenetworkevents-table) |
+| `DeviceFileEvents` | Examine installer files, browser components, and scenario artifact activity | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicefileevents-table) |
+| `DeviceProcessEvents` | Examine executable activity, command lines, and parent processes | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table) |
+| `DeviceNetworkEvents` | Examine network connections attributed to Tor Browser components | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicenetworkevents-table) |
 
 ## Investigation Queries
 
@@ -86,7 +117,7 @@ DeviceFileEvents
 | order by Timestamp asc
 ```
 
-**Interpretation:** File events establish recorded installer activity. Download-origin information, when available, provides additional acquisition context.
+**Evidence assessment:** File events establish recorded installer activity. Download-origin information, when available, provides additional acquisition context.
 
 ### 2. Installer Execution
 
@@ -106,7 +137,7 @@ DeviceProcessEvents
 | order by Timestamp asc
 ```
 
-**Interpretation:** The recorded command line establishes how the installer was invoked. Successful installation requires corroborating component file or process activity.
+**Evidence assessment:** The recorded command line establishes how the installer was invoked. Successful deployment requires corroborating component file or process activity.
 
 ### 3. Tor Browser Component File Activity
 
@@ -128,7 +159,7 @@ DeviceFileEvents
 | order by Timestamp asc
 ```
 
-**Interpretation:** Component file events support reconstruction of installation or extraction activity.
+**Evidence assessment:** Component file events support reconstruction of installation or extraction activity. File activity alone does not establish executable launch.
 
 ### 4. Browser and Tor Process Execution
 
@@ -151,11 +182,11 @@ DeviceProcessEvents
 | order by Timestamp asc
 ```
 
-**Interpretation:** Executable paths and parent-process context distinguish Tor Browser components from ordinary Firefox activity.
+**Evidence assessment:** Executable paths, command lines, and parent-process context support identification of Tor Browser components and help distinguish them from ordinary Firefox activity.
 
-### 5. Associated Network Connections
+### 5. Network Activity Associated with Tor Processes
 
-Investigate connections initiated by Tor or browser processes within Tor Browser directories.
+Examine connections initiated by `tor.exe` or Firefox processes located within Tor Browser directories. The query preserves connection outcomes, destination information, and initiating-process details without restricting discovery to predetermined ports.
 
 ```kql
 DeviceNetworkEvents
@@ -179,11 +210,11 @@ DeviceNetworkEvents
 | order by Timestamp asc
 ```
 
-**Interpretation:** Process attribution connects network activity to identified executables. Port numbers alone do not establish Tor use. Loopback connections represent local activity; relay identification requires separate destination validation.
+**Evidence assessment:** Initiating-process details associate recorded network activity with the identified executables. Connection outcomes depend on the returned action types. Port numbers alone do not establish Tor use, and relay identification requires separate destination validation. These events do not independently establish which websites the user visited.
 
-### 6. Scenario Artifact Lifecycle
+### 6. Scenario Artifact Investigation
 
-Investigate recorded file actions involving `tor-shopping-list.txt`.
+Examine file activity involving `tor-shopping-list.txt`, preserving its action type, path, account, and initiating-process context.
 
 ```kql
 DeviceFileEvents
@@ -199,47 +230,51 @@ DeviceFileEvents
 | order by Timestamp asc
 ```
 
-**Interpretation:** Returned action types establish which creation, modification, or deletion events were recorded. File-event telemetry does not establish file contents or user intent.
+**Evidence assessment:** Creation, modification, and deletion findings depend on the returned action types. File-event telemetry does not establish the file’s contents or the actor’s intent.
 
 ## Evidence Correlation
 
 | Investigation Stage | Supporting Evidence |
 | --- | --- |
-| Installer acquisition | Installer file events and download-origin information |
+| Installer acquisition | Installer file events and available download-origin information |
 | Installer execution | Process event, executable path, account, and command line |
 | Component deployment | File activity within Tor Browser directories |
-| Browser execution | Browser and Tor process events with executable paths |
-| Network activity | Connection events and initiating-process details |
-| Artifact lifecycle | Recorded actions involving the scenario text file |
+| Browser execution | Browser and Tor process events with executable paths and parent-process context |
+| Network activity | Connection events, recorded outcomes, and initiating-process details |
+| Scenario artifact activity | Recorded actions involving `tor-shopping-list.txt` |
 
-Events are correlated using endpoint identity, UTC timestamps, accounts, executable paths, and process information. The accompanying threat hunt report presents the observed findings and supporting evidence.
+Events are correlated using endpoint identity, UTC timestamps, accounts, executable paths, and process information.
 
-## Capstone Deliverables
+The controlled activities describe what was performed in the lab. Investigation findings describe what the available telemetry supports. Any gaps between those activities and recorded events should be documented in the accompanying report.
 
-- Controlled endpoint activity simulation.
+## Project Deliverables
+
+- Controlled scenario documentation.
 - File, process, and network investigation queries.
 - Supporting screenshots and event records.
-- Chronological event reconstruction.
-- Threat hunt report with findings and response recommendations.
+- Chronological activity reconstruction.
+- Investigation report with findings, evidence limitations, and response recommendations.
 
 ## Skills Demonstrated
 
+- Controlled security scenario development.
 - Microsoft Defender for Endpoint investigation.
 - KQL query development.
 - Endpoint telemetry analysis.
 - File, process, and network event correlation.
 - Evidence evaluation and technical reporting.
 
-## Created By
+## Project Author
 
 - **Author:** John Hernandez
 - **GitHub:** [jhernandezcyber](https://github.com/jhernandezcyber)
-- **Project:** Tor Browser Threat-Hunting Capstone
+- **Project:** Endpoint Threat Hunt: Unauthorized TOR Usage
+- **Document:** Scenario Development and Investigation Framework
 - **Completed:** October 2026
 
 ## Revision History
 
 | Version | Date | Changes | Author |
 | --- | --- | --- | --- |
-| 1.0 | October 4, 2026 | Initial capstone documentation | John Hernandez |
-| 1.1 | October 11, 2026 | Refined investigation queries, updated installer reference, and improved technical documentation | John Hernandez |
+| 1.0 | October 4, 2026 | Initial scenario development and investigation framework | John Hernandez |
+| 1.1 | October 11, 2026 | Refined scenario documentation, investigation queries, installer reference, and evidence assessments | John Hernandez |

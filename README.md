@@ -202,7 +202,10 @@ DeviceFileEvents
 | order by Timestamp asc
 ```
 
-![Shopping-list artifact evidence](image-6.png)
+<img width="1071" height="90" alt="image" src="https://github.com/user-attachments/assets/eecc74ee-3bc0-4f4d-bff8-430968e905c1" />
+
+<img width="1050" height="95" alt="image" src="https://github.com/user-attachments/assets/f14d4ed7-5187-4cde-908f-48ec8d8b7ae9" />
+
 
 *Figure 5. Investigation of the scenario text-file artifact.*
 

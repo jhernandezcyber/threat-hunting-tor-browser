@@ -1,4 +1,5 @@
-# Cybersecurity Capstone: Tor Browser Threat Hunt
+<img width="1098" height="499" alt="image" src="https://github.com/user-attachments/assets/43d1a158-b33d-4037-9904-27b0dc1df1e5" />
+# Tor Browser Threat Hunt
 
 **Investigation of Unauthorized Tor Browser Installation and Activity**
 

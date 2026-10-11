@@ -17,7 +17,7 @@ This report distinguishes documented observations from findings requiring additi
 | Author and Analyst | John Hernandez |
 | GitHub | [jhernandezcyber](https://github.com/jhernandezcyber) |
 | Project | Tor Browser Threat-Hunting Capstone |
-| Environment | Microsoft Azure lab |
+| Environment | Microsoft Azure–Hosted Security Testing Environment |
 | Operating System | Windows 11 |
 | Endpoint | `jh-tor-hunt-01` |
 | Activity Account | `employee` |

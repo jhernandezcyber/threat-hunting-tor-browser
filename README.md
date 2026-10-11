@@ -259,11 +259,10 @@ A final determination of Tor Browser use depends on corroborating the browser an
 ## Author
 
 **John Hernandez**  
-[GitHub: jhernandezcyber](https://github.com/jhernandezcyber)
 
 ## Revision History
 
 | Version | Date | Changes | Author |
 | --- | --- | --- | --- |
-| 1.0 | October 4, 2026 | Initial capstone documentation | John Hernandez |
+| 1.0 | October 4, 2026 | Endpoint Threat Hunt: Investigation Findings and Supporting Evidence | John Hernandez |
 | 1.1 | October 11, 2026 | Updated investigation scope, KQL queries, and evidence assessment | John Hernandez |

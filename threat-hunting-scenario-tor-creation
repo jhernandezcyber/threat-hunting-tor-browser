@@ -1,97 +1,245 @@
-# Threat Event (Unauthorized TOR Usage)
-**Unauthorized TOR Browser Installation and Use**
+# Cybersecurity Capstone: Tor Browser Threat Hunting
 
-## Steps the "Bad Actor" took Create Logs and IoCs:
-1. Download the TOR browser installer: https://www.torproject.org/download/
-2. Install it silently: ```tor-browser-windows-x86_64-portable-14.0.1.exe /S```
-3. Opens the TOR browser from the folder on the desktop
-4. Connect to TOR and browse a few sites. For example:
-   - **WARNING: The links to onion sites change a lot and these have changed. However if you connect to Tor and browse around normal sites a bit, the necessary logs should still be created:**
-   - Current Dread Forum: ```dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion```
-   - Dark Markets Forum: ```dreadytofatroptsdj6io7l3xptbet6onoyno2yv7jicoxknyazubrad.onion/d/DarkNetMarkets```
-   - Current Elysium Market: ```elysiumutkwscnmdohj23gkcyp3ebrf4iio3sngc5tvcgyfp4nqqmwad.top/login```
+**Scenario Development and Detection of Unauthorized Tor Browser Activity**
 
-6. Create a folder on your desktop called ```tor-shopping-list.txt``` and put a few fake (illicit) items in there
-7. Delete the file.
+## Project Overview
 
----
+This capstone demonstrates a complete lab simulation and endpoint investigation of Tor Browser installation and use. The project combines controlled activity generation, KQL investigation queries, and evidence-based reporting using Microsoft Defender for Endpoint.
 
-## Tables Used to Detect IoCs:
-| **Parameter**       | **Description**                                                              |
-|---------------------|------------------------------------------------------------------------------|
-| **Name**| DeviceFileEvents|
-| **Info**|https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceinfo-table|
-| **Purpose**| Used for detecting TOR download and installation, as well as the shopping list creation and deletion. |
+The objective is to reconstruct activity across file, process, and network telemetry and document the evidence supporting each finding.
 
-| **Parameter**       | **Description**                                                              |
-|---------------------|------------------------------------------------------------------------------|
-| **Name**| DeviceProcessEvents|
-| **Info**|https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceinfo-table|
-| **Purpose**| Used to detect the silent installation of TOR as well as the TOR browser and service launching.|
+## Project Profile
 
-| **Parameter**       | **Description**                                                              |
-|---------------------|------------------------------------------------------------------------------|
-| **Name**| DeviceNetworkEvents|
-| **Info**|https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicenetworkevents-table|
-| **Purpose**| Used to detect TOR network activity, specifically tor.exe and firefox.exe making connections over ports to be used by TOR (9001, 9030, 9040, 9050, 9051, 9150).|
+| Attribute | Detail |
+| --- | --- |
+| Author | John Hernandez |
+| GitHub | [jhernandezcyber](https://github.com/jhernandezcyber) |
+| Environment | Windows 11 virtual machine hosted in Microsoft Azure |
+| Endpoint | `jh-tor-hunt-01` |
+| Simulation account | `employee` |
+| Monitoring platform | Microsoft Defender for Endpoint |
+| Query language | Kusto Query Language (KQL) |
+| Installer | `tor-browser-windows-x86_64-portable-15.0.20.exe` |
+| Activity window | October 5, 2026, UTC |
+| Project completed | October 2026 |
 
----
+## Scenario
 
-## Related Queries:
-```kql
-// Installer name == tor-browser-windows-x86_64-portable-(version).exe
-// Detect the installer being downloaded
-DeviceFileEvents
-| where FileName startswith "tor"
+Management suspects that an employee is using Tor Browser to bypass organizational network restrictions. The investigation examines installer activity, browser execution, network connections, and related file artifacts to reconstruct the sequence of events.
 
-// TOR Browser being silently installed
-// Take note of two spaces before the /S (I don't know why)
-DeviceProcessEvents
-| where ProcessCommandLine contains "tor-browser-windows-x86_64-portable-14.0.1.exe  /S"
-| project Timestamp, DeviceName, ActionType, FileName, ProcessCommandLine
+The scenario represents a simulated acceptable-use policy violation. Activity was performed on a controlled lab endpoint.
 
-// TOR Browser or service was successfully installed and is present on the disk
-DeviceFileEvents
-| where FileName has_any ("tor.exe", "firefox.exe")
-| project  Timestamp, DeviceName, RequestAccountName, ActionType, InitiatingProcessCommandLine
+## Investigation Objectives
 
-// TOR Browser or service was launched
-DeviceProcessEvents
-| where ProcessCommandLine has_any("tor.exe","firefox.exe")
-| project  Timestamp, DeviceName, AccountName, ActionType, ProcessCommandLine
+- Identify Tor Browser installer acquisition and execution.
+- Identify Tor Browser components and associated processes.
+- Investigate network connections attributed to those processes.
+- Examine the lifecycle of a scenario-specific text file.
+- Correlate events into a chronological investigation timeline.
+- Document findings and appropriate response recommendations.
 
-// TOR Browser or service is being used and is actively creating network connections
-DeviceNetworkEvents
-| where InitiatingProcessFileName in~ ("tor.exe", "firefox.exe")
-| where RemotePort in (9001, 9030, 9040, 9050, 9051, 9150)
-| project Timestamp, DeviceName, InitiatingProcessAccountName, InitiatingProcessFileName, RemoteIP, RemotePort, RemoteUrl
-| order by Timestamp desc
+## Activity Performed
 
-// User shopping list was created and, changed, or deleted
-DeviceFileEvents
-| where FileName contains "shopping-list.txt"
+1. Downloaded Tor Browser from the [official Tor Project website](https://www.torproject.org/download/).
+2. Executed the installer on `jh-tor-hunt-01`.
+3. Launched Tor Browser from its installation directory.
+4. Connected to Tor and browsed websites to generate network telemetry.
+5. Created the desktop text file `tor-shopping-list.txt` with fictional test entries.
+6. Deleted the text file to generate additional file activity.
+
+### Silent Installation Test Command
+
+```powershell
+.\tor-browser-windows-x86_64-portable-15.0.20.exe /S
 ```
 
----
+The process command line provides the evidence needed to determine whether the silent-installation switch was used during a particular execution.
 
-## Created By:
-- **Author Name**: Josh Madakor
-- **Author Contact**: https://www.linkedin.com/in/joshmadakor/
-- **Date**: August 31, 2024
+## Telemetry Sources
 
-## Validated By:
-- **Reviewer Name**: 
-- **Reviewer Contact**: 
-- **Validation Date**: 
+| Table | Investigation Purpose | Documentation |
+| --- | --- | --- |
+| `DeviceInfo` | Verify endpoint identity and onboarding context | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceinfo-table) |
+| `DeviceFileEvents` | Investigate installer files, browser components, and artifact activity | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicefileevents-table) |
+| `DeviceProcessEvents` | Investigate executable activity, command lines, and parent processes | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-deviceprocessevents-table) |
+| `DeviceNetworkEvents` | Investigate network connections attributed to Tor Browser components | [Microsoft reference](https://learn.microsoft.com/en-us/defender-xdr/advanced-hunting-devicenetworkevents-table) |
 
----
+## Investigation Queries
 
-## Additional Notes:
-- **None**
+Each query runs independently in Microsoft Defender Advanced Hunting. Queries are scoped to `jh-tor-hunt-01` and the October 5, 2026, UTC activity window.
 
----
+### 1. Installer File Activity
 
-## Revision History:
-| **Version** | **Changes**                   | **Date**         | **Modified By**   |
-|-------------|-------------------------------|------------------|-------------------|
-| 1.0         | Initial draft                  | `October  4, 2026`  | `John Hernandez`   
+Identify Tor Browser installer file events and available download-origin information.
+
+```kql
+DeviceFileEvents
+| where Timestamp >= datetime(2026-10-05T00:00:00Z)
+| where Timestamp < datetime(2026-10-06T00:00:00Z)
+| where DeviceName =~ "jh-tor-hunt-01"
+    or DeviceName startswith "jh-tor-hunt-01."
+| where FileName startswith "tor-browser"
+| project Timestamp, DeviceName, ActionType,
+    FileName, FolderPath,
+    Account = InitiatingProcessAccountName,
+    InitiatingProcessFileName, FileOriginUrl, SHA256
+| order by Timestamp asc
+```
+
+**Interpretation:** File events establish recorded installer activity. Download-origin information, when available, provides additional acquisition context.
+
+### 2. Installer Execution
+
+Retrieve installer process events, executable paths, and complete command lines.
+
+```kql
+DeviceProcessEvents
+| where Timestamp >= datetime(2026-10-05T00:00:00Z)
+| where Timestamp < datetime(2026-10-06T00:00:00Z)
+| where DeviceName =~ "jh-tor-hunt-01"
+    or DeviceName startswith "jh-tor-hunt-01."
+| where FileName =~ "tor-browser-windows-x86_64-portable-15.0.20.exe"
+    or ProcessCommandLine contains "tor-browser-windows-x86_64-portable-15.0.20.exe"
+| project Timestamp, DeviceName, AccountName, ActionType,
+    FileName, FolderPath, ProcessCommandLine,
+    ProcessId, InitiatingProcessFileName, SHA256
+| order by Timestamp asc
+```
+
+**Interpretation:** The recorded command line establishes how the installer was invoked. Successful installation requires corroborating component file or process activity.
+
+### 3. Tor Browser Component File Activity
+
+Identify file events involving Tor and browser executables within Tor Browser directories.
+
+```kql
+DeviceFileEvents
+| where Timestamp >= datetime(2026-10-05T00:00:00Z)
+| where Timestamp < datetime(2026-10-06T00:00:00Z)
+| where DeviceName =~ "jh-tor-hunt-01"
+    or DeviceName startswith "jh-tor-hunt-01."
+| where FileName in~ ("tor.exe", "firefox.exe")
+| where FolderPath contains @"\Tor Browser\"
+    or FolderPath contains @"\TorBrowser\"
+| project Timestamp, DeviceName, ActionType,
+    FileName, FolderPath,
+    Account = InitiatingProcessAccountName,
+    InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by Timestamp asc
+```
+
+**Interpretation:** Component file events support reconstruction of installation or extraction activity.
+
+### 4. Browser and Tor Process Execution
+
+Identify Tor processes and browser executables associated with Tor Browser directories.
+
+```kql
+DeviceProcessEvents
+| where Timestamp >= datetime(2026-10-05T00:00:00Z)
+| where Timestamp < datetime(2026-10-06T00:00:00Z)
+| where DeviceName =~ "jh-tor-hunt-01"
+    or DeviceName startswith "jh-tor-hunt-01."
+| where FileName in~ ("tor.exe", "firefox.exe", "tor-browser.exe")
+| where FileName =~ "tor.exe"
+    or FolderPath contains @"\Tor Browser\"
+    or FolderPath contains @"\TorBrowser\"
+| project Timestamp, DeviceName, AccountName, ActionType,
+    FileName, FolderPath, ProcessCommandLine,
+    ProcessId, InitiatingProcessFileName,
+    InitiatingProcessFolderPath
+| order by Timestamp asc
+```
+
+**Interpretation:** Executable paths and parent-process context distinguish Tor Browser components from ordinary Firefox activity.
+
+### 5. Associated Network Connections
+
+Investigate connections initiated by Tor or browser processes within Tor Browser directories.
+
+```kql
+DeviceNetworkEvents
+| where Timestamp >= datetime(2026-10-05T00:00:00Z)
+| where Timestamp < datetime(2026-10-06T00:00:00Z)
+| where DeviceName =~ "jh-tor-hunt-01"
+    or DeviceName startswith "jh-tor-hunt-01."
+| where InitiatingProcessFileName =~ "tor.exe"
+    or (
+        InitiatingProcessFileName =~ "firefox.exe"
+        and (
+            InitiatingProcessFolderPath contains @"\Tor Browser\"
+            or InitiatingProcessFolderPath contains @"\TorBrowser\"
+        )
+    )
+| project Timestamp, DeviceName, ActionType,
+    Account = InitiatingProcessAccountName,
+    InitiatingProcessFileName, InitiatingProcessFolderPath,
+    InitiatingProcessId, RemoteIP, RemotePort,
+    RemoteUrl, LocalIP, LocalPort, Protocol
+| order by Timestamp asc
+```
+
+**Interpretation:** Process attribution connects network activity to identified executables. Port numbers alone do not establish Tor use. Loopback connections represent local activity; relay identification requires separate destination validation.
+
+### 6. Scenario Artifact Lifecycle
+
+Investigate recorded file actions involving `tor-shopping-list.txt`.
+
+```kql
+DeviceFileEvents
+| where Timestamp >= datetime(2026-10-05T00:00:00Z)
+| where Timestamp < datetime(2026-10-06T00:00:00Z)
+| where DeviceName =~ "jh-tor-hunt-01"
+    or DeviceName startswith "jh-tor-hunt-01."
+| where FileName =~ "tor-shopping-list.txt"
+| project Timestamp, DeviceName, ActionType,
+    FileName, FolderPath,
+    Account = InitiatingProcessAccountName,
+    InitiatingProcessFileName, InitiatingProcessCommandLine
+| order by Timestamp asc
+```
+
+**Interpretation:** Returned action types establish which creation, modification, or deletion events were recorded. File-event telemetry does not establish file contents or user intent.
+
+## Evidence Correlation
+
+| Investigation Stage | Supporting Evidence |
+| --- | --- |
+| Installer acquisition | Installer file events and download-origin information |
+| Installer execution | Process event, executable path, account, and command line |
+| Component deployment | File activity within Tor Browser directories |
+| Browser execution | Browser and Tor process events with executable paths |
+| Network activity | Connection events and initiating-process details |
+| Artifact lifecycle | Recorded actions involving the scenario text file |
+
+Events are correlated using endpoint identity, UTC timestamps, accounts, executable paths, and process information. The accompanying threat hunt report presents the observed findings and supporting evidence.
+
+## Capstone Deliverables
+
+- Controlled endpoint activity simulation.
+- File, process, and network investigation queries.
+- Supporting screenshots and event records.
+- Chronological event reconstruction.
+- Threat hunt report with findings and response recommendations.
+
+## Skills Demonstrated
+
+- Microsoft Defender for Endpoint investigation.
+- KQL query development.
+- Endpoint telemetry analysis.
+- File, process, and network event correlation.
+- Evidence evaluation and technical reporting.
+
+## Created By
+
+- **Author:** John Hernandez
+- **GitHub:** [jhernandezcyber](https://github.com/jhernandezcyber)
+- **Project:** Tor Browser Threat-Hunting Capstone
+- **Completed:** October 2026
+
+## Revision History
+
+| Version | Date | Changes | Author |
+| --- | --- | --- | --- |
+| 1.0 | October 4, 2026 | Initial capstone documentation | John Hernandez |
+| 1.1 | October 11, 2026 | Refined investigation queries, updated installer reference, and improved technical documentation | John Hernandez |
